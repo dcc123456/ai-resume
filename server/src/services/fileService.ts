@@ -1,13 +1,13 @@
-// resume-ai/server/src/services/fileService.js
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const config = require('../config');
+// src/services/fileService.ts
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import config from '../config';
 
 const uploadDir = path.resolve(__dirname, '..', '..', config.upload.dir);
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-function saveFile(buffer, originalName, userId) {
+export function saveFile(buffer: Buffer, originalName: string, userId: number): string {
   const ext = path.extname(originalName);
   const filename = `${userId}_${Date.now()}${ext}`;
   const filePath = path.join(uploadDir, filename);
@@ -15,17 +15,15 @@ function saveFile(buffer, originalName, userId) {
   return filePath;
 }
 
-function getFilePath(filename) {
+export function getFilePath(filename: string): string | null {
   const filePath = path.join(uploadDir, filename);
   return fs.existsSync(filePath) ? filePath : null;
 }
 
-function deleteFile(filePath) {
+export function deleteFile(filePath: string): void {
   if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
 }
 
-function computeTextHash(text) {
+export function computeTextHash(text: string): string {
   return crypto.createHash('sha256').update(text).digest('hex');
 }
-
-module.exports = { saveFile, getFilePath, deleteFile, computeTextHash };

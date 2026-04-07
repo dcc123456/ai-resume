@@ -1,5 +1,5 @@
-// resume-ai/server/src/prompts/jdParse.js
-const SYSTEM_PROMPT = '你是一位资深招聘专家。你的任务是从职位描述中提取关键信息，输出严格的JSON格式。只输出JSON，不要有任何其他内容。';
+// src/prompts/jdParse.ts
+export const SYSTEM_PROMPT = '你是一位资深招聘专家。你的任务是从职位描述中提取关键信息，输出严格的JSON格式。只输出JSON，不要有任何其他内容。';
 
 const USER_TEMPLATE = `请从以下职位描述中提取关键信息，输出JSON。字段要求：
 - title: 职位名称（字符串）
@@ -11,8 +11,6 @@ const USER_TEMPLATE = `请从以下职位描述中提取关键信息，输出JSO
 职位描述：
 {jd_text}`;
 
-function buildJDParsePrompt(jdText) {
+export function buildJDParsePrompt(jdText: string): string {
   return USER_TEMPLATE.replace('{jd_text}', jdText);
 }
-
-module.exports = { SYSTEM_PROMPT, buildJDParsePrompt };

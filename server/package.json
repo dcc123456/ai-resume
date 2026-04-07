@@ -2,14 +2,15 @@
   "name": "server",
   "version": "1.0.0",
   "description": "AI 简历优化后端服务",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "test": "vitest run",
-    "dev": "node --watch src/index.js"
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -30,7 +31,16 @@
     "puppeteer": "^24.40.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/marked": "^5.0.2",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^25.5.2",
     "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
 }

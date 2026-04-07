@@ -1,8 +1,8 @@
-// resume-ai/server/src/utils/docxGenerator.js
-const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require('docx');
+// src/utils/docxGenerator.ts
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
-function convertMarkdownToDocxElements(markdown) {
-  const paragraphs = [];
+function convertMarkdownToDocxElements(markdown: string): Paragraph[] {
+  const paragraphs: Paragraph[] = [];
   for (const line of markdown.split('\n')) {
     if (line.startsWith('# ')) {
       paragraphs.push(new Paragraph({ children: [new TextRun({ text: line.slice(2), bold: true, size: 36 })], heading: HeadingLevel.HEADING_1, spacing: { after: 100 } }));
@@ -21,9 +21,7 @@ function convertMarkdownToDocxElements(markdown) {
   return paragraphs;
 }
 
-async function generateDocxBuffer(markdown) {
+export async function generateDocxBuffer(markdown: string): Promise<Buffer> {
   const doc = new Document({ sections: [{ children: convertMarkdownToDocxElements(markdown) }] });
   return await Packer.toBuffer(doc);
 }
-
-module.exports = { generateDocxBuffer };

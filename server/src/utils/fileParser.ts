@@ -1,13 +1,16 @@
-// resume-ai/server/src/utils/fileParser.js
-const pdfParse = require('pdf-parse');
-const mammoth = require('mammoth');
+// src/utils/fileParser.ts
+import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
+
+// pdf-parse 的默认导出类型不正确，使用 require 绕过
+const pdfParseFn = (pdfParse as any).default || pdfParse;
 
 const MIN_TEXT_LENGTH = 100;
 
-async function parseFile(buffer, mimeType) {
+export async function parseFile(buffer: Buffer, mimeType: string): Promise<string> {
   let text = '';
   if (mimeType === 'application/pdf') {
-    const data = await pdfParse(buffer);
+    const data = await pdfParseFn(buffer);
     text = data.text;
   } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
     const result = await mammoth.extractRawText({ buffer });
@@ -21,5 +24,3 @@ async function parseFile(buffer, mimeType) {
   }
   return trimmed;
 }
-
-module.exports = { parseFile };
