@@ -21,6 +21,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
     const result = await uploadAndParseResume(req.file, req.userId!);
     res.json(result);
   } catch (err: any) {
+    console.error('[简历上传错误]', err.message || err, err.stack || '');
     if (err.message?.includes('不支持的文件类型') || err.message?.includes('无法解析文件')) { res.status(400).json({ error: err.message }); return; }
     res.status(500).json({ error: '简历解析失败，请稍后重试' });
   }

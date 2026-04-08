@@ -12,8 +12,13 @@ export async function uploadAndParseResume(file: Express.Multer.File, userId: nu
   const prompt = buildResumeParsePrompt(text);
   const { parsed: structuredJson } = await llm.chat(SYSTEM_PROMPT, prompt, { responseFormat: 'json' });
   const filePath = saveFile(file.buffer, file.originalname, userId);
-  const duplicateId = await findDuplicateResume(userId, text);
-  const warning = duplicateId ? '该简历内容与已上传的简历高度相似，是否覆盖？' : null;
+  let warning: string | null = null;
+  try {
+    const duplicateId = await findDuplicateResume(userId, text);
+    warning = duplicateId ? '该简历内容与已上传的简历高度相似，是否覆盖？' : null;
+  } catch (err: any) {
+    console.warn('[向量查重跳过]', err.message);
+  }
   return { structured_json: structuredJson, raw_text: text, file_path: filePath, warning };
 }
 

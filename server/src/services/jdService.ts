@@ -41,7 +41,7 @@ export async function saveJD(userId: number, originalText: string, parsedJson: a
 
 export async function getJDList(userId: number, page = 1, size = 10) {
   const offset = (page - 1) * size;
-  const items = await query('SELECT id, original_text, parsed_json, keyword_match_rate, created_at FROM job_description WHERE user_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?', [userId, size, offset]);
+  const items = await query(`SELECT id, original_text, parsed_json, keyword_match_rate, created_at FROM job_description WHERE user_id=? ORDER BY created_at DESC LIMIT ${size} OFFSET ${offset}`, [userId]);
   const [{ total }] = await query('SELECT COUNT(*) as total FROM job_description WHERE user_id=?', [userId]);
   return { items: items.map((i: any) => ({ id: i.id, title: i.parsed_json?.title || '未命名职位', created_at: i.created_at, match_rate: i.keyword_match_rate })), total };
 }

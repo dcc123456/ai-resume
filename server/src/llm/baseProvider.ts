@@ -47,7 +47,12 @@ export abstract class BaseLLMProvider {
       try {
         const response = await this._callAPI(messages, { temperature, responseFormat });
         if (responseFormat === 'json') {
-          const parsed = JSON.parse(response.content);
+          // 兼容 LLM 返回 markdown 代码块包裹的 JSON
+          let cleaned = response.content.trim();
+          if (cleaned.startsWith('```')) {
+            cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+          }
+          const parsed = JSON.parse(cleaned);
           return { parsed, raw: response.content, usage: response.usage };
         }
         return { content: response.content, usage: response.usage };

@@ -2,7 +2,7 @@
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 
-// pdf-parse 的默认导出类型不正确，使用 require 绕过
+// pdf-parse v1.x 的默认导出
 const pdfParseFn = (pdfParse as any).default || pdfParse;
 
 const MIN_TEXT_LENGTH = 100;

@@ -41,7 +41,7 @@ router.get('/list', authMiddleware, async (req: AuthRequest, res) => {
     const page = parseInt(req.query.page as string, 10) || 1;
     const size = parseInt(req.query.size as string, 10) || 10;
     res.json(await getJDList(req.userId!, page, size));
-  } catch { res.status(500).json({ error: '获取JD列表失败' }); }
+  } catch (err: any) { console.error('[JD列表错误]', err.message || err); res.status(500).json({ error: '获取JD列表失败' }); }
 });
 
 router.delete('/:jdId', authMiddleware, async (req: AuthRequest, res) => {

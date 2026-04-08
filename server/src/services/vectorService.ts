@@ -11,7 +11,9 @@ async function initChroma(): Promise<void> {
     client = new ChromaClient({ path: config.chroma.url });
     collection = await client.getOrCreateCollection({ name: 'resume_vectors' });
   } catch (err: any) {
-    console.warn('Chroma 初始化失败（非致命）:', err.message);
+    console.warn('Chroma 初始化失败（非致命），向量功能已禁用:', err.message);
+    client = null;
+    collection = null;
   }
 }
 
