@@ -17,12 +17,37 @@ const upload = multer({
 
 router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRequest, res) => {
   try {
-    if (!req.file) { res.status(400).json({ error: '请上传文件' }); return; }
+    console.log(`[简历路由] 收到上传请求，用户ID: ${req.userId}`);
+    console.log(`[简历路由] 请求内容类型: ${req.contentType}`);
+    console.log(`[简历路由] 文件信息:`, req.file ? {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      encoding: req.file.encoding,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    } : '无文件');
+    
+    if (!req.file) { 
+      console.warn('[简历路由] 未检测到上传文件');
+      res.status(400).json({ error: '请上传文件' }); 
+      return; 
+    }
+    
+    console.log(`[简历路由] 开始调用 uploadAndParseResume...`);
     const result = await uploadAndParseResume(req.file, req.userId!);
+    console.log(`[简历路由] 解析成功，返回结果`);
     res.json(result);
   } catch (err: any) {
-    console.error('[简历上传错误]', err.message || err, err.stack || '');
-    if (err.message?.includes('不支持的文件类型') || err.message?.includes('无法解析文件')) { res.status(400).json({ error: err.message }); return; }
+    console.error('========================================');
+    console.error('[简历路由] 上传处理失败:', err.message);
+    console.error('[简历路由] 错误名称:', err.name);
+    console.error('[简历路由] 错误堆栈:', err.stack);
+    console.error('========================================');
+    
+    if (err.message?.includes('不支持的文件类型') || err.message?.includes('无法解析文件') || err.message?.includes('PDF 解析失败')) { 
+      res.status(400).json({ error: err.message }); 
+      return; 
+    }
     res.status(500).json({ error: '简历解析失败，请稍后重试' });
   }
 });
