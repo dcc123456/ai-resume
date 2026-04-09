@@ -85,7 +85,10 @@ export default function ResumeUpload() {
       setRawText(res.data.raw_text);
       setFilePath(res.data.file_path);
       if (res.data.warning) setWarning(res.data.warning);
-    } catch (err: any) { setError(err.response?.data?.error || '简历解析失败'); }
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.message || '简历解析失败';
+      setError(`简历解析失败: ${msg}`);
+    }
     finally { setLoading(false); }
   };
 
