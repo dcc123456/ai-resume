@@ -5,18 +5,6 @@ import config from '../config';
 let collection: any = null;
 let client: any = null;
 
-async function initChroma(): Promise<void> {
-  if (client) return;
-  try {
-    client = new ChromaClient({ path: config.chroma.url });
-    collection = await client.getOrCreateCollection({ name: 'resume_vectors' });
-  } catch (err: any) {
-    console.warn('Chroma 初始化失败（非致命），向量功能已禁用:', err.message);
-    client = null;
-    collection = null;
-  }
-}
-
 async function getEmbedding(text: string): Promise<number[]> {
   const { getLLM } = await import('../llm');
   const llm = getLLM();
@@ -35,6 +23,21 @@ async function getEmbedding(text: string): Promise<number[]> {
     const vec = new Array(1536).fill(0);
     for (let i = 0; i < hash.length && i < vec.length; i++) vec[i] = parseInt(hash[i], 16) / 15;
     return vec;
+  }
+}
+
+async function initChroma(): Promise<void> {
+  if (client) return;
+  try {
+    client = new ChromaClient({ path: config.chroma.url });
+    collection = await client.getOrCreateCollection({ 
+      name: 'resume_vectors',
+      getEmbedding: getEmbedding,
+    });
+  } catch (err: any) {
+    console.warn('Chroma 初始化失败（非致命），向量功能已禁用:', err.message);
+    client = null;
+    collection = null;
   }
 }
 
