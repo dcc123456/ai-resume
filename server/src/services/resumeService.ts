@@ -43,7 +43,15 @@ export async function uploadAndParseResume(file: Express.Multer.File, userId: nu
   } catch (err: any) {
     console.warn('[简历服务] 向量查重跳过:', err.message);
   }
-  
+
+  // 自动保存到数据库
+  try {
+    await saveBaseResume(userId, structuredJson, text, filePath);
+    console.log(`[简历服务] 简历已自动保存到数据库`);
+  } catch (err: any) {
+    console.warn('[简历服务] 自动保存失败:', err.message);
+  }
+
   console.log(`[简历服务] ========== 简历上传处理完成 ==========`);
   return { structured_json: structuredJson, raw_text: text, file_path: filePath, warning };
 }

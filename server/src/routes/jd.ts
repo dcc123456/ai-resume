@@ -28,6 +28,18 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
   }
 });
 
+// /jd/parse 别名，支持 JSON body 格式
+router.post('/parse', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) { res.status(400).json({ error: '请提供 JD 文本' }); return; }
+    const result = await parseJD(text);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: 'JD解析失败，请稍后重试' });
+  }
+});
+
 router.post('/save', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { original_text, parsed_json } = req.body;

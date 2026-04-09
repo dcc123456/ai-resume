@@ -8,7 +8,7 @@ import { renderMarkdown } from '../utils/markdownRenderer';
 import { generateDocxBuffer } from '../utils/docxGenerator';
 import { saveFile } from './fileService';
 import { marked } from 'marked';
-import puppeteer from 'puppeteer';
+import { generatePdfBuffer } from '../utils/pdfGenerator';
 
 export async function generateCustomResume(userId: number, jdId: number) {
   const jds = await query('SELECT * FROM job_description WHERE id=? AND user_id=?', [jdId, userId]);
@@ -50,14 +50,8 @@ export async function downloadResume(userId: number, resumeId: number, format: s
     return { filename: `resume_${resumeId}.docx`, buffer };
   }
   if (format === 'pdf') {
-    const body = marked.parse(resume.markdown_text);
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:"Microsoft YaHei",sans-serif;max-width:800px;margin:0 auto;padding:20px;line-height:1.6}h1{font-size:28px;text-align:center}h2{font-size:20px;border-bottom:2px solid #333;padding-bottom:5px}h3{font-size:16px;margin-top:15px}ul{padding-left:20px}li{margin-bottom:5px}</style></head><body>${body}</body></html>`;
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const buffer = await page.pdf({ format: 'A4', margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' } });
-    await browser.close();
-    const filePath = saveFile(Buffer.from(buffer), `resume_${resumeId}.pdf`, userId);
+    const buffer = await generatePdfBuffer(resume.markdown_text);
+    const filePath = saveFile(buffer, `resume_${resumeId}.pdf`, userId);
     await query('UPDATE custom_resume SET download_url_pdf=? WHERE id=?', [filePath, resumeId]);
     return { filename: `resume_${resumeId}.pdf`, buffer };
   }
