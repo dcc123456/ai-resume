@@ -30,14 +30,34 @@ export async function generatePdfBuffer(markdownText: string): Promise<Buffer> {
     doc.on('end', () => resolve(Buffer.concat(buffers)));
     doc.on('error', reject);
 
+    // 注册中文字体
+    const fontPaths = [
+      'C:/Windows/Fonts/STXIHEI.TTF',   // 雅黑
+      'C:/Windows/Fonts/simhei.ttf',     // 黑体
+      'C:/Windows/Fonts/simsun.ttc',     // 宋体
+    ];
+    let fontRegistered = false;
+    for (const fp of fontPaths) {
+      try {
+        doc.registerFont('ChineseFont', fp);
+        fontRegistered = true;
+        console.log(`[PDF] 已加载中文字体: ${fp}`);
+        break;
+      } catch (e) {
+        console.warn(`[PDF] 字体加载失败: ${fp}`);
+      }
+    }
+
     const tokens = tokenizeMarkdown(markdownText);
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
     for (const token of tokens) {
+      // 每次写入前确保 x 位置回到左边距，防止换页后位置偏移
+      doc.x = doc.page.margins.left;
       switch (token.type) {
         case 'heading': {
           const fontSize = token.depth === 1 ? 22 : token.depth === 2 ? 16 : 13;
-          doc.font('Helvetica-Bold').fontSize(fontSize);
+          doc.font('ChineseFont').fontSize(fontSize);
           doc.text(token.text, { width: pageWidth });
 
           if (token.depth === 2) {
@@ -52,7 +72,7 @@ export async function generatePdfBuffer(markdownText: string): Promise<Buffer> {
           break;
         }
         case 'paragraph': {
-          doc.font('Helvetica').fontSize(10);
+          doc.font('ChineseFont').fontSize(10);
           doc.text(token.text, { width: pageWidth, lineGap: 3 });
           doc.moveDown(0.5);
           break;
@@ -61,7 +81,7 @@ export async function generatePdfBuffer(markdownText: string): Promise<Buffer> {
           const items = (token as any).items || [];
           for (const item of items) {
             const text = typeof item === 'string' ? item : item.text || '';
-            doc.font('Helvetica').fontSize(10);
+            doc.font('ChineseFont').fontSize(10);
             doc.text(`•  ${text}`, doc.page.margins.left + 15, doc.y, {
               width: pageWidth - 15,
               lineGap: 2,
@@ -72,7 +92,7 @@ export async function generatePdfBuffer(markdownText: string): Promise<Buffer> {
           break;
         }
         case 'list_item': {
-          doc.font('Helvetica').fontSize(10);
+          doc.font('ChineseFont').fontSize(10);
           doc.text(`•  ${token.text}`, doc.page.margins.left + 15, doc.y, {
             width: pageWidth - 15,
             lineGap: 2,
@@ -81,13 +101,13 @@ export async function generatePdfBuffer(markdownText: string): Promise<Buffer> {
           break;
         }
         case 'text': {
-          doc.font('Helvetica').fontSize(10);
+          doc.font('ChineseFont').fontSize(10);
           doc.text(token.text, { width: pageWidth, lineGap: 3 });
           doc.moveDown(0.3);
           break;
         }
         case 'strong': {
-          doc.font('Helvetica-Bold').fontSize(10);
+          doc.font('ChineseFont').fontSize(10);
           doc.text(token.text, { width: pageWidth, continued: false });
           doc.moveDown(0.2);
           break;
@@ -104,7 +124,7 @@ export async function generatePdfBuffer(markdownText: string): Promise<Buffer> {
         }
         default:
           if (token.text) {
-            doc.font('Helvetica').fontSize(10);
+            doc.font('ChineseFont').fontSize(10);
             doc.text(token.text, { width: pageWidth, lineGap: 3 });
             doc.moveDown(0.3);
           }

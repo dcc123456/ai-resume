@@ -22,7 +22,7 @@ export class MiniMaxProvider extends BaseLLMProvider {
     const startTime = Date.now();
     const response = await fetch(`${this.baseUrl}/text/chatcompletion_v2`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${this.apiKey.substring(0, 10)}...`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     const elapsed = Date.now() - startTime;
