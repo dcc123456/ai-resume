@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS base_resume (
   raw_text TEXT NOT NULL,
   structured_json JSON NOT NULL,
   original_file_url VARCHAR(500),
+  photo_base64 MEDIUMTEXT,
   text_hash VARCHAR(64),
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

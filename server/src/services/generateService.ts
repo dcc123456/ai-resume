@@ -9,6 +9,9 @@ import { generateDocxBuffer } from '../utils/docxGenerator';
 import { saveFile } from './fileService';
 import { marked } from 'marked';
 import { generatePdfBuffer } from '../utils/pdfGenerator';
+import { generatePdfCompact } from '../utils/pdfGeneratorFromTemplate';
+import { buildHtmlResume } from '../utils/htmlResumeTemplate';
+import { htmlToPdfBuffer } from '../utils/htmlToPdf';
 
 export async function generateCustomResume(userId: number, jdId: number) {
   const jds = await query('SELECT * FROM job_description WHERE id=? AND user_id=?', [jdId, userId]);
@@ -18,9 +21,14 @@ export async function generateCustomResume(userId: number, jdId: number) {
   const jd = jds[0], base = bases[0];
   const baseJson = typeof base.structured_json === 'string' ? JSON.parse(base.structured_json) : base.structured_json;
   const jdParsed = typeof jd.parsed_json === 'string' ? JSON.parse(jd.parsed_json) : jd.parsed_json;
+  const photoBase64 = base.photo_base64 || null;
   const llm = getLLM();
   const prompt = buildGeneratePrompt(jd.original_text, baseJson);
   let { parsed: generatedJson } = await llm.chat(SYSTEM_PROMPT, prompt, { responseFormat: 'json' });
+  // 保留原始简历头像
+  if (photoBase64) {
+    generatedJson.photo_base64 = photoBase64;
+  }
   let factReport = factCheck(generatedJson, baseJson);
   if (factReport.hasIssues) {
     const retryResult = await llm.chat(SYSTEM_PROMPT, prompt + RETRY_APPEND, { responseFormat: 'json' });
@@ -50,7 +58,10 @@ export async function downloadResume(userId: number, resumeId: number, format: s
     return { filename: `resume_${resumeId}.docx`, buffer };
   }
   if (format === 'pdf') {
-    const buffer = await generatePdfBuffer(resume.markdown_text);
+    const generatedJson = typeof resume.generated_json === 'string' ? JSON.parse(resume.generated_json) : resume.generated_json;
+    // 使用 HTML + Puppeteer 方案生成 PDF，保留完整样式
+    const html = buildHtmlResume(generatedJson);
+    const buffer = await htmlToPdfBuffer(html);
     const filePath = saveFile(buffer, `resume_${resumeId}.pdf`, userId);
     await query('UPDATE custom_resume SET download_url_pdf=? WHERE id=?', [filePath, resumeId]);
     return { filename: `resume_${resumeId}.pdf`, buffer };

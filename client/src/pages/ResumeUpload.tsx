@@ -4,8 +4,9 @@ import FileUpload from '../components/FileUpload';
 import ResumeForm from '../components/ResumeForm';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
+import { AlertDialog } from '../components/ui/alert-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Download, AlertTriangle } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 // 将 LLM 返回的各种格式统一转换为 ResumeForm 期望的格式
 function normalizeResumeData(raw: any): any {
@@ -70,6 +71,7 @@ export default function ResumeUpload() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [warning, setWarning] = useState('');
+  const [showWarnDialog, setShowWarnDialog] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -84,7 +86,7 @@ export default function ResumeUpload() {
       setParsedData(normalizeResumeData(res.data.structured_json));
       setRawText(res.data.raw_text);
       setFilePath(res.data.file_path);
-      if (res.data.warning) setWarning(res.data.warning);
+      if (res.data.warning) { setWarning(res.data.warning); setShowWarnDialog(true); }
     } catch (err: any) {
       const msg = err.response?.data?.error || err.message || '简历解析失败';
       setError(`简历解析失败: ${msg}`);
@@ -115,7 +117,13 @@ export default function ResumeUpload() {
         {parsedData && <Button variant="outline" onClick={handleDownloadRaw}><Download className="w-4 h-4 mr-2" />下载原始文件</Button>}
       </div>
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-      {warning && <Alert className="bg-yellow-50 border-yellow-200"><AlertTriangle className="w-4 h-4 text-yellow-600" /><AlertDescription className="text-yellow-700">{warning}</AlertDescription></Alert>}
+      <AlertDialog
+        open={showWarnDialog}
+        title="简历相似提示"
+        description={warning}
+        onConfirm={() => setShowWarnDialog(false)}
+        onCancel={() => setShowWarnDialog(false)}
+      />
       {success && <Alert className="bg-green-50 border-green-200"><AlertDescription className="text-green-700">{success}</AlertDescription></Alert>}
       <Card><CardHeader><CardTitle>上传简历文件</CardTitle></CardHeader><CardContent><FileUpload onFileSelect={handleFileSelect} accept=".pdf,.docx" label="简历文件（PDF/Word）" />{loading && <p className="text-sm text-gray-500 mt-2 text-center">正在解析简历，请稍候...</p>}</CardContent></Card>
       {parsedData && <Card><CardHeader><CardTitle>简历信息确认</CardTitle><p className="text-sm text-gray-500">请核对以下信息，如有误可手动修正</p></CardHeader><CardContent><ResumeForm data={parsedData} onChange={handleSave} /></CardContent></Card>}
