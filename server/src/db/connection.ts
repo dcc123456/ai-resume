@@ -1,25 +1,31 @@
 // src/db/connection.ts
-import mysql from 'mysql2/promise';
-import config from '../config';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
-const pool = mysql.createPool({
-  host: config.db.host,
-  port: config.db.port,
-  user: config.db.user,
-  password: config.db.password,
-  database: config.db.database,
-  waitForConnections: true,
-  connectionLimit: 10,
-  charset: 'utf8mb4',
-});
+let db: any = null;
+
+async function initDb() {
+  if (!db) {
+    db = await open({
+      filename: './resume_ai.db',
+      driver: sqlite3.Database
+    });
+    // 导入 schema
+    const fs = require('fs');
+    const schema = fs.readFileSync('./src/db/schema.sql', 'utf8');
+    await db.exec(schema);
+  }
+  return db;
+}
 
 export async function query(sql: string, params?: any[]): Promise<any[]> {
-  const [results] = await pool.execute(sql, params);
-  return results as any[];
+  const database = await initDb();
+  const result = await database.all(sql, params);
+  return result;
 }
 
 export async function getConnection() {
-  return pool.getConnection();
+  return await initDb();
 }
 
-export { pool };
+export { db };

@@ -18,10 +18,10 @@ export async function seedTemplates(): Promise<void> {
 
   for (const tmpl of templates) {
     try {
-      // 使用 INSERT IGNORE 避免重复插入
+      // 使用 INSERT OR IGNORE 避免重复插入 (SQLite 兼容)
       await query(
-        `INSERT IGNORE INTO resume_templates (name, template_key, has_photo, sort_order) VALUES (?, ?, ?, ?)`,
-        [tmpl.name, tmpl.key, tmpl.has_photo, tmpl.sort_order]
+        `INSERT OR IGNORE INTO resume_templates (name, template_key, has_photo, sort_order) VALUES (?, ?, ?, ?)`,
+        [tmpl.name, tmpl.key, tmpl.has_photo ? 1 : 0, tmpl.sort_order]
       );
       console.log(`[Seed] 模板 "${tmpl.name}" 已添加或已存在`);
     } catch (err) {
