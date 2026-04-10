@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
-import { LayoutDashboard, FileText, Briefcase, Wand2, History, LogOut, Trash2 } from 'lucide-react';
+import { LayoutDashboard, FileText, Briefcase, Wand2, History, LogOut, Trash2, User, Palette } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', label: '首页', icon: LayoutDashboard },
@@ -9,6 +9,8 @@ const navItems = [
   { to: '/jd', label: '职位描述', icon: Briefcase },
   { to: '/generate', label: '生成简历', icon: Wand2 },
   { to: '/history', label: '历史记录', icon: History },
+  { to: '/templates', label: '简历模板', icon: Palette },
+  { to: '/profile', label: '个人资料', icon: User },
 ];
 
 export default function Layout() {

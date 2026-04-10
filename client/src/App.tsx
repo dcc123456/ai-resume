@@ -7,6 +7,8 @@ import ResumeUpload from './pages/ResumeUpload';
 import JDInput from './pages/JDInput';
 import GenerateResume from './pages/GenerateResume';
 import History from './pages/History';
+import Profile from './pages/Profile';
+import Templates from './pages/Templates';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -33,6 +35,8 @@ function AppRoutes() {
         <Route path="jd" element={<JDInput />} />
         <Route path="generate" element={<GenerateResume />} />
         <Route path="history" element={<History />} />
+        <Route path="templates" element={<Templates />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
   );

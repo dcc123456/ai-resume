@@ -32,14 +32,20 @@ router.put('/:resumeId', authMiddleware, async (req: AuthRequest, res) => {
 
 router.post('/:resumeId/download', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { format } = req.body;
+    const { format, template_id, include_photo } = req.body;
     if (!['docx', 'pdf'].includes(format)) { res.status(400).json({ error: '不支持的格式' }); return; }
-    const result = await downloadResume(req.userId!, parseInt(paramToStr(req.params.resumeId), 10), format);
+
+    const result = await downloadResume(req.userId!, parseInt(paramToStr(req.params.resumeId), 10), {
+      format,
+      template_id,
+      include_photo,
+    });
     res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(result.filename)}`);
     res.setHeader('Content-Type', format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.send(result.buffer);
   } catch (err: any) {
     if (err.message === '简历不存在') { res.status(404).json({ error: err.message }); return; }
+    if (err.message === '模板不存在') { res.status(400).json({ error: err.message }); return; }
     res.status(500).json({ error: '下载失败' });
   }
 });

@@ -10,7 +10,8 @@ import { saveFile } from './fileService';
 import { marked } from 'marked';
 import { generatePdfBuffer } from '../utils/pdfGenerator';
 import { generatePdfCompact } from '../utils/pdfGeneratorFromTemplate';
-import { buildHtmlResume } from '../utils/htmlResumeTemplate';
+import { buildHtmlResume, templateRegistry } from '../utils/templateRegistry';
+import { getUserTemplatePreference } from './templateService';
 import { htmlToPdfBuffer } from '../utils/htmlToPdf';
 
 export async function generateCustomResume(userId: number, jdId: number) {
@@ -47,25 +48,69 @@ export async function updateResumeMarkdown(userId: number, resumeId: number, mar
   return { success: true };
 }
 
-export async function downloadResume(userId: number, resumeId: number, format: string) {
+interface DownloadOptions {
+  format: string;
+  template_id?: number;
+  include_photo?: boolean;
+}
+
+export async function downloadResume(userId: number, resumeId: number, options: DownloadOptions) {
+  const { format, template_id, include_photo } = options;
+
   const resumes = await query('SELECT * FROM custom_resume WHERE id=? AND user_id=?', [resumeId, userId]);
   if (resumes.length === 0) throw new Error('简历不存在');
   const resume = resumes[0];
+
   if (format === 'docx') {
     const buffer = await generateDocxBuffer(resume.markdown_text);
     const filePath = saveFile(buffer, `resume_${resumeId}.docx`, userId);
     await query('UPDATE custom_resume SET download_url_docx=? WHERE id=?', [filePath, resumeId]);
     return { filename: `resume_${resumeId}.docx`, buffer };
   }
+
   if (format === 'pdf') {
     const generatedJson = typeof resume.generated_json === 'string' ? JSON.parse(resume.generated_json) : resume.generated_json;
-    // 使用 HTML + Puppeteer 方案生成 PDF，保留完整样式
-    const html = buildHtmlResume(generatedJson);
+
+    // 获取用户的模板偏好设置
+    let useTemplateKey = 'classic';
+    let useIncludePhoto = include_photo ?? true;
+
+    if (template_id) {
+      // 如果指定了模板ID，从数据库获取模板信息
+      const { getTemplateById } = await import('./templateService');
+      const template = await getTemplateById(template_id);
+      if (template) {
+        useTemplateKey = template.template_key;
+      }
+    } else {
+      // 使用用户的默认模板偏好
+      const preference = await getUserTemplatePreference(userId);
+      if (preference) {
+        const { getTemplateById: getTplById } = await import('./templateService');
+        const template = await getTplById(preference.template_id);
+        if (template) {
+          useTemplateKey = template.template_key;
+        }
+        // 如果没有显式传入 include_photo，使用用户偏好
+        if (include_photo === undefined) {
+          useIncludePhoto = preference.include_photo;
+        }
+      }
+    }
+
+    // 使用模板系统生成 HTML
+    const template = templateRegistry.get(useTemplateKey);
+    if (!template) {
+      throw new Error('模板不存在');
+    }
+
+    const html = template.render(generatedJson, { includePhoto: useIncludePhoto });
     const buffer = await htmlToPdfBuffer(html);
     const filePath = saveFile(buffer, `resume_${resumeId}.pdf`, userId);
     await query('UPDATE custom_resume SET download_url_pdf=? WHERE id=?', [filePath, resumeId]);
     return { filename: `resume_${resumeId}.pdf`, buffer };
   }
+
   throw new Error('不支持的格式');
 }
 
